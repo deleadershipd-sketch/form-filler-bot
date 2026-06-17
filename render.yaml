@@ -1,17 +1,9 @@
 services:
   - type: web
     name: form-filler-api
-    runtime: python
+    runtime: image
     plan: free
-    buildCommand: |
-      pip install -r requirements.txt
-      apt-get update && apt-get install -y chromium-browser chromium-driver
-    startCommand: |
-      cd web_app && python app.py
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.0
-      - key: CHROME_PATH
-        value: /usr/bin/chromium-browser
-      - key: CHROMEDRIVER_PATH
-        value: /usr/bin/chromedriver
+        value: 3.11.10
