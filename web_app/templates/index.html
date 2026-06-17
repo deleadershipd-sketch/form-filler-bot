@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 تعبئة الاستبيانات التلقائية</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            animation: slideUp 0.5s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+            background: #f8f9fa;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        #status.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        #status.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        #status.info {
+            display: block;
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .stats {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .stat-box:hover {
+            transform: scale(1.05);
+        }
+        
+        .stat-box .number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-box .label {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .stat-box.success .number {
+            color: #28a745;
+        }
+        
+        .stat-box.fail .number {
+            color: #dc3545;
+        }
+        
+        .stat-box.total .number {
+            color: #667eea;
+        }
+        
+        .note {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+        
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .loader.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-details {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        
+        .result-item.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .result-item.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 22px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 5px;
+            }
+            
+            .stat-box .number {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 تعبئة الاستبيانات</h1>
+        <p class="subtitle">أداة تلقائية لتعبئة Google Forms و Microsoft Forms</p>
+        
+        <div class="form-group">
+            <label>🔗 رابط الاستبيان</label>
+            <input type="url" id="urlInput" placeholder="https://docs.google.com/forms/d/..." />
+        </div>
+        
+        <div class="form-group">
+            <label>🔢 عدد مرات التعبئة</label>
+            <input type="number" id="countInput" value="5" min="1" max="20" />
+        </div>
+        
+        <button id="startBtn" onclick="startFilling()">🚀 بدء التعبئة</button>
+        
+        <div id="status"></div>
+        
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #666;">جاري التعبئة...</p>
+        </div>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-box success">
+                <div class="number" id="successCount">0</div>
+                <div class="label">✅ نجح</div>
+            </div>
+            <div class="stat-box fail">
+                <div class="number" id="failCount">0</div>
+                <div class="label">❌ فشل</div>
+            </div>
+            <div class="stat-box total">
+                <div class="number" id="totalCount">0</div>
+                <div class="label">📊 المجموع</div>
+            </div>
+        </div>
+        
+        <div class="result-details" id="resultDetails"></div>
+        
+        <div class="note">
+            ⚠️ <strong>تنبيه:</strong> هذا البرنامج للاستخدام التعليمي فقط. يرجى احترام شروط الخدمة للمنصات وعدم استخدامه للتأثير على استبيانات الغير.
+        </div>
+    </div>
+    
+    <script>
+        let isRunning = false;
+        let success = 0, fail = 0, total = 0;
+        
+        async function startFilling() {
+            if (isRunning) return;
+            
+            const url = document.getElementById('urlInput').value.trim();
+            const count = parseInt(document.getElementById('countInput').value);
+            
+            // التحقق من المدخلات
+            if (!url) {
+                showStatus('❌ الرجاء إدخال رابط الاستبيان', 'error');
+                return;
+            }
+            
+            if (!url.includes('google.com') && !url.includes('microsoft') && !url.includes('office.com')) {
+                showStatus('⚠️ الرجاء إدخال رابط Google Forms أو Microsoft Forms', 'error');
+                return;
+            }
+            
+            if (!count || count < 1 || count > 20) {
+                showStatus('❌ الرجاء إدخال عدد بين 1 و 20', 'error');
+                return;
+            }
+            
+            // بدء التعبئة
+            isRunning = true;
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = true;
+            startBtn.textContent = '⏳ جاري التعبئة...';
+            
+            // إظهار المحمل
+            document.getElementById('loader').classList.add('active');
+            document.getElementById('stats').style.display = 'none';
+            document.getElementById('resultDetails').innerHTML = '';
+            
+            // إعادة تعيين الإحصائيات
+            success = 0;
+            fail = 0;
+            total = 0;
+            updateStats();
+            
+            showStatus('🔄 جاري تعبئة الاستبيان...', 'info');
+            
+            try {
+                const response = await fetch('/api/fill', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        count: count
+                    })
+                });
+                
+                const result = await response.json();
+                console.log('Result:', result);
+                
+                if (result.success) {
+                    success = result.success_count || 0;
+                    fail = result.fail_count || 0;
+                    total = result.total || count;
+                    
+                    showStatus(`✅ ${result.message}`, 'success');
+                    
+                    // عرض التفاصيل
+                    if (result.results) {
+                        let detailsHTML = '<h4 style="margin: 10px 0; color: #333;">📋 تفاصيل التعبئة:</h4>';
+                        result.results.forEach(r => {
+                            const status = r.success ? '✅ نجح' : '❌ فشل';
+                            const className = r.success ? 'success' : 'fail';
+                            detailsHTML += `<div class="result-item ${className}">#${r.index} - ${status}</div>`;
+                        });
+                        document.getElementById('resultDetails').innerHTML = detailsHTML;
+                    }
+                } else {
+                    showStatus(`❌ فشل التعبئة: ${result.error || 'خطأ غير معروف'}`, 'error');
+                    fail = count;
+                    total = count;
+                }
+                
+            } catch (error) {
+                showStatus(`❌ خطأ في الاتصال: ${error.message}`, 'error');
+                fail = count;
+                total = count;
+            }
+            
+            // إخفاء المحمل
+            document.getElementById('loader').classList.remove('active');
+            document.getElementById('stats').style.display = 'grid';
+            updateStats();
+            
+            // إعادة الزر
+            isRunning = false;
+            startBtn.disabled = false;
+            startBtn.textContent = '🚀 بدء التعبئة';
+        }
+        
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+            status.style.display = 'block';
+            
+            // إخفاء تلقائي بعد 10 ثواني
+            clearTimeout(status.timeout);
+            status.timeout = setTimeout(() => {
+                status.style.display = 'none';
+            }, 10000);
+        }
+        
+        function updateStats() {
+            document.getElementById('successCount').textContent = success;
+            document.getElementById('failCount').textContent = fail;
+            document.getElementById('totalCount').textContent = total;
+        }
+    </script>
+</body>
+</html>
